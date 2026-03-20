@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page.title }} - 我的博客{% endblock %}
+
+{% block content %}
+<div class="static-page">
+    <h1>{{ page.title }}</h1>
+    <div class="page-content">
+        {{ page.get_content_html|safe }}
+    </div>
+</div>
+
+{% if page.page_type == 'guestbook' %}
+<section class="guestbook-section">
+    <h2>留言板</h2>
+    
+    <div class="guestbook-form">
+        <h3>发表留言</h3>
+        <form action="{% url 'blog:guestbook' %}" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="author_name">姓名 *</label>
+                <input type="text" id="author_name" name="author_name" required>
+            </div>
+            <div class="form-group">
+                <label for="author_email">邮箱 *</label>
+                <input type="email" id="author_email" name="author_email" required>
+            </div>
+            <div class="form-group">
+                <label for="content">留言内容 *</label>
+                <textarea id="content" name="content" rows="5" required></textarea>
+            </div>
+            <button type="submit">提交留言</button>
+        </form>
+        <p class="notice">提示: 留言提交后需要审核才会显示</p>
+    </div>
+
+    <div class="guestbook-list">
+        {% for message in guestbook_messages %}
+        <div class="guestbook-item">
+            <div class="header">
+                <span class="author">{{ message.author_name }}</span>
+                <span class="date">{{ message.created_at|date:"Y-m-d H:i" }}</span>
+            </div>
+            <div class="content">{{ message.content|linebreaks }}</div>
+        </div>
+        {% empty %}
+        <p class="no-messages">暂无留言</p>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
