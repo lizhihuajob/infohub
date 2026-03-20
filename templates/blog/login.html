@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}登录 - 我的博客{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0" style="border-radius: 16px;">
+            <div class="card-header text-white text-center py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px 16px 0 0;">
+                <i class="bi bi-person-circle display-4 mb-2"></i>
+                <h4 class="mb-0">管理员登录</h4>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>{{ message }}</div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>{{ form.non_field_errors.0 }}</div>
+                </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'blog:login' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next|default:'/' }}">
+                    
+                    <div class="mb-4">
+                        <label for="id_username" class="form-label fw-semibold">
+                            <i class="bi bi-person me-1"></i>用户名
+                        </label>
+                        <input type="text" name="username" id="id_username" class="form-control form-control-lg" 
+                               placeholder="请输入用户名" required autofocus style="border-radius: 10px;"
+                               value="{{ form.username.value|default:'' }}">
+                        {% if form.username.errors %}
+                        <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="id_password" class="form-label fw-semibold">
+                            <i class="bi bi-lock me-1"></i>密码
+                        </label>
+                        <input type="password" name="password" id="id_password" class="form-control form-control-lg" 
+                               placeholder="请输入密码" required style="border-radius: 10px;">
+                        {% if form.password.errors %}
+                        <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" style="border-radius: 10px;">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>登录
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer bg-light text-center py-3" style="border-radius: 0 0 16px 16px;">
+                <a href="{% url 'blog:home' %}" class="text-decoration-none text-muted">
+                    <i class="bi bi-arrow-left me-1"></i>返回首页
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
