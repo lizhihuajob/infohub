@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title|default:'留言板' }} - 个人博客{% endblock %}
+
+{% block content %}
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h1 class="card-title h2 mb-4"><i class="bi bi-pencil-square me-2 text-primary"></i>{{ page_title|default:'留言板' }}</h1>
+            
+            {% if page_content %}
+                <div class="post-content mb-5">
+                    {{ page_content|safe }}
+                </div>
+            {% endif %}
+
+            <!-- 留言表单 -->
+            <div class="card mb-5">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">写下您的留言</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.author_name.id_for_label }}" class="form-label">昵称 *</label>
+                                {{ form.author_name }}
+                                {% if form.author_name.errors %}
+                                    <div class="text-danger small">{{ form.author_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.author_email.id_for_label }}" class="form-label">邮箱 * <small class="text-muted">(不会公开)</small></label>
+                                {{ form.author_email }}
+                                {% if form.author_email.errors %}
+                                    <div class="text-danger small">{{ form.author_email.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.author_url.id_for_label }}" class="form-label">网站</label>
+                                {{ form.author_url }}
+                                {% if form.author_url.errors %}
+                                    <div class="text-danger small">{{ form.author_url.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.content.id_for_label }}" class="form-label">留言内容 *</label>
+                            {{ form.content }}
+                            {% if form.content.errors %}
+                                <div class="text-danger small">{{ form.content.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-1"></i>提交留言
+                        </button>
+                        <small class="text-muted ms-2">新留言默认进入审核队列，审核通过后显示</small>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 留言列表 -->
+            <div id="messages">
+                <h3 class="mb-4">留言列表 ({{ messages|length }})</h3>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <strong>
+                                            {% if message.author_url %}
+                                                <a href="{{ message.author_url }}" target="_blank" class="text-decoration-none">{{ message.author_name }}</a>
+                                            {% else %}
+                                                {{ message.author_name }}
+                                            {% endif %}
+                                        </strong>
+                                        <small class="text-muted ms-2">{{ message.created_at|date:"Y-m-d H:i" }}</small>
+                                    </div>
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>已审核</span>
+                                </div>
+                                <p class="card-text mb-0">{{ message.content|linebreaks }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-chat-left-dots display-1 mb-3"></i>
+                        <h5>暂无留言，快来抢沙发！</h5>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

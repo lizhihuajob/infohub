@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tag.name }} - 标签归档 - 个人博客{% endblock %}
+
+{% block content %}
+    <div class="mb-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="card-title h3 mb-2">
+                    <i class="bi bi-tag me-2 text-success"></i>标签: {{ tag.name }}
+                </h2>
+                <p class="text-muted small mt-2 mb-0">共 {{ page_obj.paginator.count }} 篇文章</p>
+            </div>
+        </div>
+
+        {% for post in posts %}
+            <div class="card mb-4 shadow-sm">
+                {% if post.cover_image %}
+                    <img src="{{ post.cover_thumbnail.url }}" class="card-img-top" alt="{{ post.title }}" style="height: 200px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h3 class="card-title h5">
+                        <a href="{{ post.get_absolute_url }}" class="text-decoration-none text-dark">{{ post.title }}</a>
+                    </h3>
+                    <div class="text-muted mb-2 small">
+                        <span><i class="bi bi-calendar me-1"></i>{{ post.publish_date|date:"Y年m月d日" }}</span>
+                        <span class="ms-3"><i class="bi bi-person me-1"></i>{{ post.author.username }}</span>
+                        {% if post.category %}
+                            <span class="ms-3"><i class="bi bi-folder me-1"></i><a href="{{ post.category.get_absolute_url }}" class="text-muted text-decoration-none">{{ post.category.name }}</a></span>
+                        {% endif %}
+                        <span class="ms-3"><i class="bi bi-eye me-1"></i>{{ post.views }}</span>
+                    </div>
+                    <p class="card-text text-muted small">{{ post.excerpt }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ post.get_absolute_url }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-book me-1"></i>阅读更多
+                        </a>
+                        {% if post.tags.all %}
+                            <div class="tags">
+                                {% for tag_item in post.tags.all %}
+                                    {% if tag_item.id != tag.id %}
+                                        <a href="{{ tag_item.get_absolute_url }}" class="badge bg-secondary text-decoration-none me-1 small">{{ tag_item.name }}</a>
+                                    {% else %}
+                                        <span class="badge bg-primary me-1 small">{{ tag_item.name }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-tag-x display-1 text-muted mb-3"></i>
+                    <h4 class="text-muted">该标签下暂无文章</h4>
+                    <a href="{% url 'blogapp:home' %}" class="btn btn-primary mt-3">
+                        <i class="bi bi-house me-1"></i>返回首页
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- 分页 -->
+        {% if is_paginated %}
+            <nav aria-label="文章分页">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                <i class="bi bi-chevron-left"></i> 上一页
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="bi bi-chevron-left"></i> 上一页</span>
+                        </li>
+                    {% endif %}
+
+                    {% for num in paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                下一页 <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">下一页 <i class="bi bi-chevron-right"></i></span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+{% endblock %}
