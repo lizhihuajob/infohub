@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load blog_tags %}
+
+{% block title %}{{ page.title }} - 我的博客{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    {% if page.page_type == 'about' %}
+    <!-- 关于我页面特殊样式 -->
+    <div class="card-header text-white p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="text-center">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                 style="width: 100px; height: 100px; background: rgba(255,255,255,0.2); font-size: 3rem;">
+                <i class="bi bi-person-circle text-white"></i>
+            </div>
+            <h1 class="h2 mb-0">{{ page.title }}</h1>
+        </div>
+    </div>
+    {% elif page.page_type == 'links' %}
+    <!-- 友情链接页面特殊样式 -->
+    <div class="card-header text-white p-4" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <div class="text-center">
+            <i class="bi bi-link-45deg display-1 mb-2 opacity-75"></i>
+            <h1 class="h2 mb-0">{{ page.title }}</h1>
+        </div>
+    </div>
+    {% else %}
+    <div class="card-header bg-light p-4">
+        <h1 class="h2 mb-0">{{ page.title }}</h1>
+    </div>
+    {% endif %}
+    
+    <div class="card-body p-4 p-md-5">
+        <div class="post-content">
+            {{ page.get_content_html|safe }}
+        </div>
+        
+        <!-- 友情链接页面显示所有链接 -->
+        {% if page.page_type == 'links' %}
+        <hr class="my-5">
+        <h3 class="mb-4"><i class="bi bi-link-45deg me-2"></i>友情链接</h3>
+        <div class="row g-4">
+            {% get_links as all_links %}
+            {% for link in all_links %}
+            <div class="col-md-6 col-lg-4">
+                <a href="{{ link.url }}" target="_blank" class="text-decoration-none">
+                    <div class="card h-100 border-0 shadow-sm" style="transition: all 0.3s ease;">
+                        <div class="card-body text-center p-4">
+                            {% if link.logo %}
+                            <img src="{{ link.logo.url }}" alt="{{ link.name }}" class="mb-3" style="max-height: 50px;">
+                            {% else %}
+                            <i class="bi bi-globe display-4 text-primary mb-3"></i>
+                            {% endif %}
+                            <h5 class="card-title text-dark mb-2">{{ link.name }}</h5>
+                            {% if link.description %}
+                            <p class="card-text text-muted small mb-0">{{ link.description }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>暂无友情链接
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+{% if page.page_type == 'links' %}
+    <!-- 友情链接页面侧边栏显示快速链接 -->
+    <div class="card sidebar-card">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            <i class="bi bi-lightning me-2"></i>快速链接
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+                <a href="{% url 'blog:home' %}" class="text-decoration-none">
+                    <i class="bi bi-house-door text-primary me-2"></i>返回首页
+                </a>
+            </li>
+            <li class="list-group-item">
+                <a href="{% url 'blog:page' 'about' %}" class="text-decoration-none">
+                    <i class="bi bi-person text-info me-2"></i>关于我
+                </a>
+            </li>
+        </ul>
+    </div>
+{% else %}
+    {{ block.super }}
+{% endif %}
+{% endblock %}

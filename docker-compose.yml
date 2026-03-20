@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8081:8000"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=your-secret-key-here-change-in-production
+      - PYTHONPATH=/app
+    command: >
+      sh -c "chmod +x /app/init.sh &&
+             /app/init.sh"
