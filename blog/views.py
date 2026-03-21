@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, View
+from django.http import JsonResponse
 from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
@@ -7,6 +8,11 @@ from django.contrib.auth.views import LoginView
 from django.core.paginator import Paginator
 from .models import Post, Category, Tag, Page, Comment
 from .forms import CommentForm, SearchForm
+
+
+def health_check(request):
+    """健康检查端点"""
+    return JsonResponse({'status': 'healthy', 'message': 'Blog service is running'})
 
 
 class CustomLoginView(LoginView):

@@ -2,6 +2,7 @@
 Django settings for myblog project.
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -12,12 +13,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-your-secret-key-here-change-in-production'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-only-for-development')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', '0') == '1'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -41,6 +42,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'csp.middleware.CSPMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -78,8 +81,15 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'data' / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 60,
+            'check_same_thread': False,
+        },
     }
 }
+
+# 解决SQLite并发写入问题
+CONN_MAX_AGE = 0
 
 
 # Password validation
@@ -120,6 +130,8 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
@@ -152,3 +164,70 @@ LOGIN_URL = '/login/'
 
 # Pagination
 POSTS_PER_PAGE = 10
+
+# Security settings for production
+# 注意：在开发环境或没有HTTPS的环境中，某些安全设置可能导致浏览器警告
+# 可以通过设置环境变量 DISABLE_HTTPS_REDIRECT=1 来禁用HTTPS重定向
+DISABLE_HTTPS_REDIRECT = os.environ.get('DISABLE_HTTPS_REDIRECT', '0') == '1'
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    
+    # 仅在未禁用HTTPS时启用这些设置
+    if not DISABLE_HTTPS_REDIRECT:
+        SECURE_SSL_REDIRECT = True
+        SESSION_COOKIE_SECURE = True
+        CSRF_COOKIE_SECURE = True
+        SECURE_HSTS_SECONDS = 31536000
+        SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+        SECURE_HSTS_PRELOAD = True
+    else:
+        SECURE_SSL_REDIRECT = False
+        SESSION_COOKIE_SECURE = False
+        CSRF_COOKIE_SECURE = False
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}
+
+# Content Security Policy (CSP)
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com")
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com")
+CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com", "https://fonts.googleapis.com")
+CSP_IMG_SRC = ("'self'", "data:", "https:")
+CSP_CONNECT_SRC = ("'self'",)
+CSP_OBJECT_SRC = ("'none'",)
+CSP_BASE_URI = ("'self'",)
+CSP_FRAME_SRC = ("'none'",)
