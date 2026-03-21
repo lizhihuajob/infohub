@@ -12,6 +12,9 @@ urlpatterns = [
     path('', include('blog.urls')),
 ]
 
+# 媒体文件服务（开发和生产环境都需要）
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# 静态文件服务（仅在开发环境，生产环境使用whitenoise或nginx）
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

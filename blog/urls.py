@@ -5,6 +5,9 @@ from . import views
 app_name = 'blog'
 
 urlpatterns = [
+    # 健康检查
+    path('health/', views.health_check, name='health_check'),
+    
     # 首页
     path('', views.HomeView.as_view(), name='home'),
 
