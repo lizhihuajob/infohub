@@ -1,17 +1,39 @@
-version: '3.8'
-
 services:
   web:
+    container_name: glm-infohub
     build: .
+    restart: unless-stopped
     ports:
-      - "8081:8000"
+      - "8082:8000"
     volumes:
-      - .:/app
-      - ./data:/app/data
+      - infohub-data:/app/data
+      - infohub-media:/app/media
+      - infohub-logs:/app/logs
+      - infohub-staticfiles:/app/staticfiles
     environment:
-      - DEBUG=1
-      - SECRET_KEY=your-secret-key-here-change-in-production
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-change-this-to-a-secure-random-string-in-production}
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
+      - DJANGO_CSRF_TRUSTED_ORIGINS=${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:8082,http://127.0.0.1:8082}
+      - DJANGO_LOG_LEVEL=${DJANGO_LOG_LEVEL:-INFO}
+      - DJANGO_ADMIN_USERNAME=${DJANGO_ADMIN_USERNAME:-admin}
+      - DJANGO_ADMIN_EMAIL=${DJANGO_ADMIN_EMAIL:-admin@example.com}
+      - DJANGO_ADMIN_PASSWORD=${DJANGO_ADMIN_PASSWORD:-}
       - PYTHONPATH=/app
-    command: >
-      sh -c "chmod +x /app/init.sh &&
-             /app/init.sh"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  infohub-data:
+  infohub-media:
+  infohub-logs:
+  infohub-staticfiles:

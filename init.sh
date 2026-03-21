@@ -1,21 +1,49 @@
 #!/bin/bash
+set -e
 
-# 创建数据目录
-mkdir -p /app/data
+mkdir -p /app/data /app/logs /app/staticfiles /app/media
 
-# 运行数据库迁移
-python manage.py migrate
+chmod 777 /app/data /app/logs /app/staticfiles /app/media
 
-# 创建超级用户（如果不存在）
-python manage.py shell << EOF
+if [ -f /app/data/db.sqlite3 ]; then
+    chmod 666 /app/data/db.sqlite3
+fi
+
+echo "Running database migrations..."
+python manage.py migrate --noinput
+
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
+ADMIN_USERNAME="${DJANGO_ADMIN_USERNAME:-admin}"
+ADMIN_EMAIL="${DJANGO_ADMIN_EMAIL:-admin@example.com}"
+ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD:-}"
+
+if [ -n "$ADMIN_PASSWORD" ]; then
+    echo "Creating superuser if not exists..."
+    python manage.py shell << EOF
 from django.contrib.auth import get_user_model
 User = get_user_model()
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-    print('超级用户已创建: admin / admin123')
+username = '${ADMIN_USERNAME}'
+email = '${ADMIN_EMAIL}'
+password = '${ADMIN_PASSWORD}'
+if not User.objects.filter(username=username).exists():
+    User.objects.create_superuser(username, email, password)
+    print(f'Superuser created: {username}')
 else:
-    print('超级用户已存在')
+    print(f'Superuser already exists: {username}')
 EOF
+else
+    echo "DJANGO_ADMIN_PASSWORD not set, skipping superuser creation"
+fi
 
-# 启动服务器
-python manage.py runserver 0.0.0.0:8000
+echo "Starting Gunicorn server..."
+exec gunicorn \
+    --bind 0.0.0.0:8000 \
+    --workers 2 \
+    --threads 4 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info \
+    myblog.wsgi:application
